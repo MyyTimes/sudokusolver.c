@@ -9,7 +9,7 @@
 #define MAGENTA "\033[35m"
 #define CYAN    "\033[36m"
 
-//BOLD COLORS
+/* BOLD COLORS */
 #define BBLACK   "\033[1;30m"
 #define BRED     "\033[1;31m"
 #define BGREEN   "\033[1;32m"
@@ -21,4 +21,4 @@
 
 #define BackGround "\033[48;5;236m"
 
-#endif // COLOR_PALETTE_FOR_TERMINAL_H
+#endif /* COLOR_PALETTE_FOR_TERMINAL_H */

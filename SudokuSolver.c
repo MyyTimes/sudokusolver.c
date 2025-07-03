@@ -339,14 +339,17 @@ int **CreateBoard(FILE *file, int *boardLength, int *boxWidth, int *boxHeight)
         char *ptr = line;
 
         /* CHANGE THIS PART */
-        while (*ptr) {
-            if (*ptr == ',') {
-                // Virgül ile biten token
-                if (start == ptr) {
-                    // Arada veri yok, boş hücre
+        while(*ptr) 
+        {
+            if(*ptr == ',')
+            {
+                if 
+                (start == ptr)
+                {
                     board[row][col++] = 0;
-                } else {
-                    // Veri var, kopyala ve ata
+                } 
+                else 
+                {
                     char temp = *ptr;
                     *ptr = '\0';
                     board[row][col++] = atoi(start);
@@ -356,10 +359,13 @@ int **CreateBoard(FILE *file, int *boardLength, int *boxWidth, int *boxHeight)
             }
             ptr++;
         }
-        // Son token (virgülden sonra ya da satır sonunda)
-        if (start == ptr) {
+        
+        if(start == ptr) 
+        {
             board[row][col++] = 0;
-        } else {
+        } 
+        else
+        {
             board[row][col++] = atoi(start);
         }
 
