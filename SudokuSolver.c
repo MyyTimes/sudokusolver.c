@@ -15,33 +15,12 @@ int FindProperInBox(int**, int, int, int, int, int*, int*);
 int FindProperInLine(int**, int, int, int, int*, int*); /* HORIZANTAL and VERTICAL */
 
 int **CreateBoard(FILE*, int*, int*, int*);
-int CheckBoard(int**, int, int, int);
+int IsBoardComplete(int**, int);
+int IsBoardValid(int**, int, int, int);
 void PrintBoard(int**, int, int, int);
 void CopyBoard(int**, int**, int);
 void FreeBoard(int**, int);
 void SaveBoardToText(FILE*, int**, int, int);
-
-int IsValidPlacement(int **board, int boardLength, int boxW, int boxH, int row, int col, int num)
-{
-    int i, j;
-    int startRow = row - (row % boxH);
-    int startCol = col - (col % boxW);
-
-    for (i = 0; i < boardLength; i++) {
-        if (board[row][i] == num || board[i][col] == num)
-            return 0;
-    }
-
-    for (i = startRow; i < startRow + boxH; i++) {
-        for (j = startCol; j < startCol + boxW; j++) {
-            if (board[i][j] == num)
-                return 0;
-        }
-    }
-
-    return 1;
-}
-
 
 int main()
 {
@@ -63,9 +42,10 @@ int main()
         tempBoard[i] = (int*)calloc(boardLength, sizeof(int));
     }
 
+    /* print read text (as a board) */
     PrintBoard(board, boardLength, boxWidth, boxHeight);
 
-    if(CheckBoard(board, boardLength, boxWidth, boxHeight))
+    if(IsBoardValid(board, boardLength, boxWidth, boxHeight) == 0)
     {
         printf(RED "This sudoku board cannot be solvable!\n" RESET);
         return 1;
@@ -93,17 +73,18 @@ int main()
     printf(GREEN "\nSOLVED SUDOKU:\n" RESET);
     PrintBoard(board, boardLength, boxWidth, boxHeight);
 
-    printf("Board solved: ");
-    if(CheckBoard(board, boardLength, boxWidth, boxHeight))
-        printf(RED "Unsuccessful\n" RESET);
+    if(!IsBoardValid(board, boardLength, boxWidth, boxHeight) || !IsBoardComplete(board, boardLength))
+        printf(RED "Board solved: Unsuccessful\n" RESET);
     else
-        printf(GREEN "Successful\n" RESET);
+        printf(GREEN "Board solved: Successful\n" RESET);
     
     FreeBoard(board, boardLength);
     FreeBoard(tempBoard, boardLength);
 
     fclose(sudokuFile);
     fclose(saveStepsFile);
+
+    getchar();
     return 0;
 }
 
@@ -136,7 +117,8 @@ int FindProperSlots(int **board, int **tempBoard, int boardLength, int boxW, int
             {
                 board[foundRow][foundCol] = num;
                 isLocated = 1;
-                return isLocated;
+                FillBoardWithMarkers(tempBoard, boardLength, boxW, boxH, foundRow, foundCol, num);
+                /* return isLocated; */
             }
         }
     }
@@ -148,7 +130,8 @@ int FindProperSlots(int **board, int **tempBoard, int boardLength, int boxW, int
         {
             board[foundRow][foundCol] = num;
             isLocated = 1;
-            return isLocated;
+            FillBoardWithMarkers(tempBoard, boardLength, boxW, boxH, foundRow, foundCol, num);
+            /* return isLocated; */
         }
     }
 
@@ -159,7 +142,8 @@ int FindProperSlots(int **board, int **tempBoard, int boardLength, int boxW, int
         {
             board[foundRow][foundCol] = num;
             isLocated = 1;
-            return isLocated;
+            FillBoardWithMarkers(tempBoard, boardLength, boxW, boxH, foundRow, foundCol, num);
+            /* return isLocated; */
         }
     }
 
@@ -266,10 +250,28 @@ void FillBoardWithMarkers(int **markedBoard, int boardLength, int boxW, int boxH
     }
 }
 
-int CheckBoard(int **board, int boardLength, int boxW, int boxH)
+int IsBoardComplete(int **board, int boardLength)
+{
+    int i, j, isComplete = 1;
+    for(i = 0; i < boardLength; i++)
+    {
+        for(j = 0; j < boardLength; j++)
+        {
+            if(board[i][j] == 0)
+            {
+                isComplete = 0;
+                break;
+            }
+        }
+    }
+    return isComplete;
+}
+
+int IsBoardValid(int **board, int boardLength, int boxW, int boxH)
 {
     int row, col, i, j;
     int startCol, startRow;
+    int isValid = 1;
 
     for(row = 0; row < boardLength; row++)
     {
@@ -283,7 +285,7 @@ int CheckBoard(int **board, int boardLength, int boxW, int boxH)
                 if(board[row][col] == board[row][i] && col != i)
                 {
                     printf("The number %d is the same in (%d, %d) and (%d, %d)!\n", board[row][col], row, col, row, i);
-                    return 1;
+                    isValid = 0;
                 }
             }
             /* CHECK COLUMN */
@@ -292,7 +294,7 @@ int CheckBoard(int **board, int boardLength, int boxW, int boxH)
                 if(board[row][col] == board[i][col] && row != i)
                 {
                     printf("The number %d is the same in (%d, %d) and (%d, %d)!\n", board[row][col], row, col, i, col);
-                    return 1;
+                    isValid = 0;
                 }
             }
             /* CHECK BOX */
@@ -305,20 +307,20 @@ int CheckBoard(int **board, int boardLength, int boxW, int boxH)
                     if(board[row][col] == board[i][j] && !(row == i && col == j))
                     {
                         printf("The number %d is the same in (%d, %d) and (%d, %d)!\n", board[row][col], row, col, i, j);
-                        return 1;
+                        isValid = 0;
                     }
                 }
             }
         }
     }
 
-    return 0;
+    return isValid;
 }
 
 int **CreateBoard(FILE *file, int *boardLength, int *boxWidth, int *boxHeight)
 {
     int **board;
-    int col, row;
+    int col, row, numberStartIndex, currentIndex;
     char line[MAX_LINE_LENGTH];
     char *token;
 
@@ -328,45 +330,39 @@ int **CreateBoard(FILE *file, int *boardLength, int *boxWidth, int *boxHeight)
     board = (int**)calloc(*boardLength, sizeof(int*));
 
     row = 0;
+    numberStartIndex = 0;
+    currentIndex = 0;
     while(fgets(line, sizeof(line), file) && row < *boardLength)
     {
         board[row] = (int*)calloc(*boardLength, sizeof(int));
         line[strcspn(line, "\n")] = '\0';
 
-        /* PARSE ROW */
         col = 0;
-        char *start = line;
-        char *ptr = line;
+        numberStartIndex = 0;
+        currentIndex = 0;
 
-        /* CHANGE THIS PART */
-        while(*ptr) 
+        while(1)
         {
-            if(*ptr == ',')
+            while(line[currentIndex] != ',' && line[currentIndex] != '\0')
             {
-                if 
-                (start == ptr)
-                {
-                    board[row][col++] = 0;
-                } 
-                else 
-                {
-                    char temp = *ptr;
-                    *ptr = '\0';
-                    board[row][col++] = atoi(start);
-                    *ptr = temp;
-                }
-                start = ptr + 1;
+                currentIndex++;
             }
-            ptr++;
-        }
-        
-        if(start == ptr) 
-        {
-            board[row][col++] = 0;
-        } 
-        else
-        {
-            board[row][col++] = atoi(start);
+
+            if(numberStartIndex == currentIndex)
+            {
+                board[row][col] = 0;
+            }
+            else
+            {
+                board[row][col] = atoi(line + numberStartIndex);
+            }
+  
+            if(line[currentIndex] == '\0')
+                break;
+
+            col++;
+            currentIndex++;
+            numberStartIndex = currentIndex;
         }
 
         row++;
