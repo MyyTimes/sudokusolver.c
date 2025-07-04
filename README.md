@@ -21,15 +21,15 @@ Lastly, prints the solved board with color-coded formatting in the terminal.
 Text name must be names as `sudoku.txt`
 The first line of the input file specifies:
 [length of the sudoku board side] [length of the boxes height] [length of the boxes width]
-Empty cells are represented by consecutive commas (`,,`).
-Example text:
-  6 2 3
-  1,,,,,4
-  ,2,,,,
-  ,,3,5,,
-  ,,6,4,,
-  ,6,,,5,
-  ,,1,,,6
+Empty cells are represented by consecutive commas (`,,`).  
+Example text:  
+  6 2 3  
+  1,,,,,4  
+  ,2,,,,  
+  ,,3,5,,  
+  ,,6,4,,  
+  ,6,,,5,  
+  ,,1,,,6  
 
 ## Build and Run
 
@@ -40,11 +40,13 @@ Example text:
 bash
 `gcc --ansi SudokuSolver.c -o sudokusolver`
 
-FILE STRUCTURE
-├── SudokuSolver.c
-├── ColorPaletteForTerminal.h
-├── sudoku.txt
-└── README.md
+FILE STRUCTURE  
+├── SudokuSolver.c  
+├── ColorPaletteForTerminal.h  
+├── sudoku.txt  
+└── README.md  
 
 ## Author
 Muhammed Yusuf Yıldız
+
+Thanks to Yağız Rasim Kalay for the sudoku examples.
